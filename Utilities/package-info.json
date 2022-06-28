@@ -1,0 +1,24 @@
+{
+  "label" : "Utilities",
+  "version" : "v1.0",
+  "description" : "",
+  "callbacks" : [ ],
+  "keyStrokes" : [ {
+    "actionId" : "GetBoundingBoxTimes",
+    "keyStroke" : "ctrl X",
+    "context" : "PelagicEchogramModule"
+  }, {
+    "actionId" : "GetPingTimestamp",
+    "keyStroke" : "ctrl Z",
+    "context" : "PelagicEchogramModule"
+  } ],
+  "toolbarButtons" : [ ],
+  "menus" : [ {
+    "text" : "Plugins",
+    "items" : [ {
+      "packageId" : "1",
+      "actionId" : "GetEchogram",
+      "text" : "Save publication echogram"
+    } ]
+  } ]
+}

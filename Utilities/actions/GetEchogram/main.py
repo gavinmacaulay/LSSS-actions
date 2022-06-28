@@ -1,0 +1,135 @@
+# --- Begin generated header ---
+import os
+import sys
+sys.path.append(os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + '/../../../../include'))
+import lsss
+# --- End generated header ---
+
+# Code to get an echogram from LSSS using the LSSS API. 
+#
+# Sets the echogram up to be suitable for publications.
+# Also does the same with the map.
+#
+
+import xml.etree.ElementTree as ET
+from pathlib import Path
+from PIL import Image, ImageOps
+import requests
+import shutil
+
+doEchogram = True
+doMap = False
+figure_label = '090'
+
+save_dir = Path(r'C:\Users\gavin\OneDrive - Havforskningsinstituttet\Projects\2022 WindFarms\results')
+save_dir = Path(r'C:\Users\gavin\OneDrive - Aqualyd Limited\Documents\Aqualyd\Projects\2020-08 AAD calibration\data\2022 post voyage cals')
+
+# echogram overlays to keep on
+overlaysToKeep = ['DepthMarkerOverlay', 'VerticalLineOverlay', 'EchogramImageOverlay']
+# and same for the map
+mapOverlaysToKeep = ['BackgroundMapOverlay', 'LatLonOverlay', 'SurveyLineOverlay']
+
+# Settings to change
+depth_marker_font_size = 20 # [points]
+vertical_line_marker_font_size = 20 # [points]
+vertical_line_text_type = 'Distance' # Distance, Time, or Ping
+
+map_axis_font_size = 20 # [points]
+
+# applies to both echogram and the map
+image_width = 90 # [mm]
+image_dpi = 600 # [dpi]
+
+# output goes here
+echogram_image_file = save_dir.joinpath(f'Figure_{figure_label}_echogram.png')
+map_image_file = save_dir.joinpath(f'Figure_{figure_label}_map.png')
+
+# used for directly getting the images
+lsss_url = 'http://127.0.0.1:8000'
+
+########################################################
+# Setup up the echogram
+if doEchogram:
+    image_width_pixels = int(image_width / 25.4 * image_dpi) # [pixels]
+    
+    # Get the echogram config
+    d = lsss.get('/lsss/module/PelagicEchogramModule/config/xml')
+    
+    # and turn off everything we don't want
+    root = ET.fromstring(d)
+    
+    for child in root[0]:
+        if child.attrib['name'] in overlaysToKeep:
+            child.attrib['enabled'] = 'true'
+        else:
+            child.attrib['enabled'] = 'false'
+    
+    # Put our altered config to lsss
+    lsss.post('/lsss/module/PelagicEchogramModule/config/xml', data=ET.tostring(root))
+    
+    # and adjust some specific things
+    p = '/lsss/module/PelagicEchogramModule/overlay/'
+    lsss.post(p+'DepthMarkerOverlay/config/parameter/FontSize', json={'value': depth_marker_font_size})
+    lsss.post(p+'VerticalLineOverlay/config/parameter/FontSize', json={'value': vertical_line_marker_font_size})
+    
+    lsss.post(p+'VerticalLineOverlay/config/parameter/Text', json={'value': vertical_line_text_type})
+    lsss.post(p+'VerticalLineOverlay/config/parameter/ShowSa', json={'value': False})
+    
+    #################################################
+    # get the screen grab of the echogram
+    echogram_url = lsss_url + '/lsss/module/PelagicEchogramModule/image'
+    eg_img = Image.open(requests.get(echogram_url, stream=True).raw)
+    # trim off the vertical scroll bar, which is 16 pixels wide
+    border = (0, 0, 16, 0) # pixels to remove off the left, top, right, bottom edges
+    eg_img = ImageOps.crop(eg_img, border)
+    
+    # get the colourbar
+    colourbar_url = lsss_url + '/lsss/module/ColorBarModule/image'
+    cb_img = Image.open(requests.get(colourbar_url, stream=True).raw)
+    # trim off the label at the bottom, which is 22 pixels high
+    cb_img = ImageOps.crop(cb_img, (0, 0, 0, 22))
+    
+    # and add the colourbar to the right hand side of the echogram
+    width = eg_img.size[0] + cb_img.size[0]
+    height = max(eg_img.size[1], cb_img.size[1])
+    
+    line_width = 2 # [pixels]
+    
+    img = Image.new('RGB', (width+line_width, height), color='white')
+    img.paste(eg_img, (0,0))
+    img.paste(cb_img, (eg_img.size[0]+line_width, 0))
+    
+    # now resample the image and give a higher dpi, as often asked for by journals.
+    img = img.resize((image_width_pixels, int(img.size[1] * image_width_pixels / img.size[0])), Image.BICUBIC)
+    img.save(echogram_image_file, dpi=(image_dpi, image_dpi), optimize=True)
+
+###################################################
+# Do the map figure
+
+if doEchogram:
+    
+    # Get the map config
+    d = lsss.get('/lsss/module/MapModule/config/xml')
+    
+    # and turn off everything we don't want
+    root = ET.fromstring(d)
+    
+    for child in root[1]:
+        if child.attrib['name'] in mapOverlaysToKeep:
+            child.attrib['enabled'] = 'true'
+        else:
+            child.attrib['enabled'] = 'false'
+    
+    # Put our altered config to lsss
+    lsss.post('/lsss/module/MapModule/config/xml', data=ET.tostring(root))
+    
+    # and adjust some specific things
+    p = '/lsss/module/MapModule/overlay/'
+    lsss.post(p+'LatLonOverlay/config/parameter/FontSize', json={'value': map_axis_font_size})
+    
+    map_url = lsss_url + '/lsss/module/MapModule/image'
+    map_img = Image.open(requests.get(map_url, stream=True).raw)
+    map_img = map_img.resize((image_width_pixels, int(map_img.size[1] * image_width_pixels / map_img.size[0])), Image.BICUBIC)
+    map_img.save(map_image_file, dpi=(image_dpi, image_dpi), optimize=True)
+
+
