@@ -18,8 +18,6 @@ import requests
 import shutil
 
 save_dir = Path(r'C:\Users\gavin\OneDrive - Havforskningsinstituttet\Projects\2022 WindFarms\results')
-#save_dir = Path(r'C:\Users\gavin\OneDrive - Aqualyd Limited\Documents\Aqualyd\Projects\2020-08 AAD calibration\data\2022 post voyage cals')
-
 
 def saveEchogram(saveDir, figure_label='test', image_dpi=600):
 
