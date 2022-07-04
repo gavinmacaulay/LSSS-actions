@@ -8,12 +8,14 @@ import lsss
 import pandas as pd
 from pathlib import Path
 import time
-
+import datetime
 projectDir = Path(r'C:\Users\gavin\OneDrive - Havforskningsinstituttet\Projects\2022 WindFarms')
 dataDir = projectDir.joinpath('data')
 saveDir = projectDir.joinpath('results')
 
 df = pd.read_csv(dataDir.joinpath('Echograms to create.csv'))
+
+#df = df.iloc[:3]
 
 for i, row in df.iterrows():
     start = pd.to_datetime(row['start_date'] + ' ' + row['start_utc'])
@@ -23,16 +25,11 @@ for i, row in df.iterrows():
     print(f'Saving echogram from {start} to {stop} down to {z} m')
     
     # set echogram zoom
-    p = '/lsss/module/PelagicEchogramModule/zoom/'
     limits = [{'time': start.isoformat() + 'Z', 'z': 0.0}, {'time': stop.isoformat() + 'Z', 'z': z}]
     lsss.post('/lsss/module/PelagicEchogramModule/zoom/', json=limits)
-    
     lsss.get('/lsss/data/wait')
     
-    time.sleep(5)
-
-    p = {"save_dir": str(saveDir), 'figure_label': f'{i+1:02d}', 'image_dpi': 300}
-    lsss.post('/lsss/package/Utilities/action/GetEchogram/run', json=p)
+    params = {"save_dir": str(saveDir), 'figure_label': f'{i+1:02d}', 'image_dpi': 300}
+    lsss.post('/lsss/package/Utilities/action/GetEchogram/run', json=params)
     
-    lsss.get('/lsss/data/wait')
     
