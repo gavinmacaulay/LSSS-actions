@@ -3,5 +3,20 @@
   "tooltip" : "",
   "icon" : "",
   "showDialog" : true,
-  "inputParameters" : [ ]
+  "inputParameters" : [ {
+    "name" : "save_dir",
+    "type" : "string",
+    "unit" : "",
+    "description" : "Directory where the image will be saved"
+  }, {
+    "name" : "figure_label",
+    "type" : "string",
+    "unit" : "",
+    "description" : "Text used to form the image filename"
+  }, {
+    "name" : "image_dpi",
+    "type" : "int",
+    "unit" : "pixels per inch",
+    "description" : "Resolution of saved imaged"
+  } ]
 }

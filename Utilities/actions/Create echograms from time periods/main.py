@@ -7,9 +7,7 @@ import lsss
 
 import pandas as pd
 from pathlib import Path
-
-sys.path.append("../GetEchogram")
-from main import getEchogram
+import time
 
 projectDir = Path(r'C:\Users\gavin\OneDrive - Havforskningsinstituttet\Projects\2022 WindFarms')
 dataDir = projectDir.joinpath('data')
@@ -22,7 +20,7 @@ for i, row in df.iterrows():
     stop = pd.to_datetime(row['stop_date'] + ' ' + row['stop_utc'])
     z = row['depth']
     
-    print(start, stop, z)
+    print(f'Saving echogram from {start} to {stop} down to {z} m')
     
     # set echogram zoom
     p = '/lsss/module/PelagicEchogramModule/zoom/'
@@ -30,5 +28,11 @@ for i, row in df.iterrows():
     lsss.post('/lsss/module/PelagicEchogramModule/zoom/', json=limits)
     
     lsss.get('/lsss/data/wait')
+    
+    time.sleep(5)
 
-    saveEchogram(saveDir, figure_label=f'{i+1:02d}', image_dpi=300)
+    p = {"save_dir": str(saveDir), 'figure_label': f'{i+1:02d}', 'image_dpi': 300}
+    lsss.post('/lsss/package/Utilities/action/GetEchogram/run', json=p)
+    
+    lsss.get('/lsss/data/wait')
+    

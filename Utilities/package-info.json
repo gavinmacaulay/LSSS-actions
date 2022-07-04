@@ -16,12 +16,11 @@
   "menus" : [ {
     "text" : "Plugins",
     "items" : [ {
-      "actionId" : "Create echograms from time periods",
-      "text" : "Save echograms"
-    }, {
-      "packageId" : "1",
       "actionId" : "GetEchogram",
-      "text" : "Save publication echogram"
+      "text" : "Save echogram for publication"
+    }, {
+      "actionId" : "Create echograms from time periods",
+      "text" : "Save echograms from timeperiods"
     } ]
   } ]
 }

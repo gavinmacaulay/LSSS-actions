@@ -10,6 +10,11 @@ import lsss
 # Sets the echogram up to be suitable for publications.
 # Also does the same with the map.
 #
+# If you are running LSSS on a Windows computer and using the Anaconda python
+# distribution, you need to create a file called 'conda_python.bat', which 
+# has a single line in it (change the path to suit your installation): 
+#  c:\users\gavin\anaconda3\Scripts\conda.exe run -n base python %*
+# and configure LSSS to use that script when running python actions.
 
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -17,13 +22,16 @@ from PIL import Image, ImageOps
 import requests
 import shutil
 
-save_dir = Path(r'C:\Users\gavin\OneDrive - Havforskningsinstituttet\Projects\2022 WindFarms\results')
+# Need to have a UI to allow the user to set this.
+default_save_dir = Path.home()
 
-def saveEchogram(saveDir, figure_label='test', image_dpi=600):
+def saveEchogram(save_dir=default_save_dir, figure_label='test', image_dpi=300):
 
     doEchogram = True
     doMap = False
-   
+    
+    # sometimes save_dir is just a string
+    save_dir = Path(save_dir)
     
     # echogram overlays to keep on
     overlaysToKeep = ['DepthMarkerOverlay', 'VerticalLineOverlay', 'EchogramImageOverlay', 'RegionDisplayOverlay']
@@ -43,9 +51,6 @@ def saveEchogram(saveDir, figure_label='test', image_dpi=600):
     # output goes here
     echogram_image_file = save_dir.joinpath(f'Figure_{figure_label}_echogram.png')
     map_image_file = save_dir.joinpath(f'Figure_{figure_label}_map.png')
-    
-    # used for directly getting the images
-    lsss_url = 'http://127.0.0.1:8000'
     
     ########################################################
     # Setup up the echogram
@@ -79,14 +84,14 @@ def saveEchogram(saveDir, figure_label='test', image_dpi=600):
         
         #################################################
         # get the screen grab of the echogram
-        echogram_url = lsss_url + '/lsss/module/PelagicEchogramModule/image'
+        echogram_url = lsss.baseUrl + '/lsss/module/PelagicEchogramModule/image'
         eg_img = Image.open(requests.get(echogram_url, stream=True).raw)
         # trim off the vertical scroll bar, which is 16 pixels wide
         border = (0, 0, 16, 0) # pixels to remove off the left, top, right, bottom edges
         eg_img = ImageOps.crop(eg_img, border)
         
         # get the colourbar
-        colourbar_url = lsss_url + '/lsss/module/ColorBarModule/image'
+        colourbar_url = lsss.baseUrl + '/lsss/module/ColorBarModule/image'
         cb_img = Image.open(requests.get(colourbar_url, stream=True).raw)
         # trim off the threshold labels at the bottom, each of which is 22 pixels high
         v = lsss.get('/lsss/survey/config/unit/SurveyMiscConf/parameter/AdditionalLowerThresholds')
@@ -131,11 +136,13 @@ def saveEchogram(saveDir, figure_label='test', image_dpi=600):
         p = '/lsss/module/MapModule/overlay/'
         lsss.post(p+'LatLonOverlay/config/parameter/FontSize', json={'value': map_axis_font_size})
         
-        map_url = lsss_url + '/lsss/module/MapModule/image'
+        map_url = lsss.baseUrl + '/lsss/module/MapModule/image'
         map_img = Image.open(requests.get(map_url, stream=True).raw)
         map_img = map_img.resize((image_width_pixels, int(map_img.size[1] * image_width_pixels / map_img.size[0])), Image.BICUBIC)
         map_img.save(map_image_file, dpi=(image_dpi, image_dpi), optimize=True)
     
 if __name__ == "__main__":
-    saveEchogram(save_dir)
+    
+    #raise Exception(f'{lsss.input}')
+    saveEchogram(**lsss.input)
     
