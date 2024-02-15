@@ -16,6 +16,9 @@
   "menus" : [ {
     "text" : "Plugins",
     "items" : [ {
+      "actionId" : "Calculate noise",
+      "text" : "Calculate noise"
+    }, {
       "actionId" : "GetEchogram",
       "text" : "Save echogram for publication"
     }, {
