@@ -34,14 +34,14 @@ def saveEchogram(save_dir=default_save_dir, figure_label='test', image_dpi=300):
     save_dir = Path(save_dir)
     
     # echogram overlays to keep on
-    overlaysToKeep = ['DepthMarkerOverlay', 'VerticalLineOverlay', 'EchogramImageOverlay', 'RegionDisplayOverlay']
+    overlaysToKeep = ['BottomOverlay', 'DepthMarkerOverlay', 'VerticalLineOverlay', 'EchogramImageOverlay', 'RegionDisplayOverlay']
     # and same for the map
     mapOverlaysToKeep = ['BackgroundMapOverlay', 'LatLonOverlay', 'SurveyLineOverlay']
     
     # Settings to change
     depth_marker_font_size = 20 # [points]
     vertical_line_marker_font_size = 20 # [points]
-    vertical_line_text_type = 'Distance' # Distance, Time, or Ping
+    vertical_line_text_type = 'Time' # Distance, Time, or Ping
     
     map_axis_font_size = 20 # [points]
     
