@@ -1,5 +1,6 @@
 {
   "label" : "Get selected region bounding box times",
+  "tooltip" : "",
   "icon" : "",
   "showDialog" : true,
   "inputParameters" : [ ]

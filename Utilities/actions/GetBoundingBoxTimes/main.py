@@ -14,11 +14,8 @@ sys.path.append(os.path.normpath(os.path.dirname(os.path.realpath(__file__))
 import lsss
 
 # Get the directory where the raw files are
-dir = lsss.get('/lsss/survey/config/unit/DataConf/parameter/DataDir')
-dir = Path(dir['value'])
-# if it ends in '-NMEA', remove that
-dirName = dir.name.replace('-NMEA', '')
-featureName = dirName[11:]  # remove date from the beginning of the directory name
+directory = lsss.get('/lsss/survey/config/unit/DataConf/parameter/DataDir')
+dirName = Path(directory['value'])
 
 # Dummy value for snapshot
 snapshot = '1'
@@ -54,7 +51,7 @@ for i, r in enumerate(regions):
     end_filename = numerical_data['file']['name']
 
     # Then build the csv line to go into the clipboard
-    output += f'{dirName},{featureName},{snapshot},{i+1},{start_time},{end_time},'\
+    output += f'{dirName},,{snapshot},{i+1},{start_time},{end_time},'\
         f'{start_filename},{end_filename}\n'
 
 # copy to clipboard without the trailing newline
