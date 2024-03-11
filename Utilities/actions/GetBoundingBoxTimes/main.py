@@ -64,7 +64,7 @@ for i, r in enumerate(regions):
     end_filename = numerical_data['file']['name']
 
     # Then build the csv line to go into the clipboard
-    output += f'{dirName.name},,{snapshot},{i+1},{start_time},{end_time},'\
+    output += f'{dirName.name},area,feature,{snapshot},{i+1},{start_time},{end_time},'\
         f'{start_filename},{end_filename}\n'
 
 # copy to clipboard without the trailing newline
