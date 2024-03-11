@@ -23,6 +23,19 @@ snapshot = '1'
 # Get the selected regions
 regions = lsss.get('/lsss/regions/selection')
 
+# Sort regions by start time
+region_times = []
+for r in regions:
+    # Get information about the region
+    details = lsss.get(f'/lsss/regions/region/{r}')
+    start_time = details['boundingBox'][0]['time'][0:-1]
+    region_times.append((r, start_time))
+
+# Sort on start_time
+rr = sorted(region_times, key=lambda tup: tup[1])
+# Just keep the region id
+regions = (r[0] for r in rr)
+
 output = ''
 
 # Build up the output string with a line for each region
@@ -51,7 +64,7 @@ for i, r in enumerate(regions):
     end_filename = numerical_data['file']['name']
 
     # Then build the csv line to go into the clipboard
-    output += f'{dirName},,{snapshot},{i+1},{start_time},{end_time},'\
+    output += f'{dirName.name},,{snapshot},{i+1},{start_time},{end_time},'\
         f'{start_filename},{end_filename}\n'
 
 # copy to clipboard without the trailing newline
