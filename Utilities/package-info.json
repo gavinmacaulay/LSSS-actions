@@ -8,7 +8,7 @@
     "keyStroke" : "ctrl X",
     "context" : "PelagicEchogramModule"
   }, {
-    "actionId" : "GetPingTimestamp",
+    "actionId" : "GetPingTimestampRange",
     "keyStroke" : "ctrl Z",
     "context" : "PelagicEchogramModule"
   } ],

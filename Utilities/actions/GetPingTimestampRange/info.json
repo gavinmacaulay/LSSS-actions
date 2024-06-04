@@ -1,0 +1,7 @@
+{
+  "label" : "Get ping timestamp range",
+  "tooltip" : "",
+  "icon" : "",
+  "showDialog" : true,
+  "inputParameters" : [ ]
+}
