@@ -6,6 +6,7 @@ import datetime as dt
 from pathlib import Path
 import requests
 import pandas as pd
+import geopandas as gpd
 
 # make the treeview widget able to sort columns
 class SortingTreeview(ttk.Treeview):
@@ -46,9 +47,14 @@ class SpatialBookmarkApp:
 
         self.lsssURL = 'http://localhost:8000/lsss/'
         
-        self.bookmarks_file = Path(r'V:\TAN2603\Echosounders\echosounder_logbook.xlsx')
-        self.bookmarks_file = Path(r'C:\Users\GavinMacaulay\Data - not synced\temp\echosounder_logbook.xlsx')
-        self.bookmarks = []
+
+        data_dir = Path(r'V:\TAN2603\Echosounders')
+        data_dir = Path('.')                
+
+        self.bookmarks_xls = data_dir / 'echosounder_logbook.xlsx'
+        self.bookmarks_gpkg = data_dir / 'echosounder_logbook.gpkg'
+
+        # self.bookmarks = []
         
         self._create_widgets()
         self.load_bookmarks()
@@ -102,21 +108,44 @@ class SpatialBookmarkApp:
         # post to LSSS.
         zoom_points = [{'time': start_time.strftime('%Y-%m-%dT%H:%M:%SZ')},
                        {'time': end_time.strftime('%Y-%m-%dT%H:%M:%SZ')}]
-        requests.post(self.lsssURL + 'module/PelagicEchogramModule/zoom', json=zoom_points)
+        try:
+            requests.post(self.lsssURL + 'module/PelagicEchogramModule/zoom', json=zoom_points)
+        except requests.ConnectionError:
+            print('Could not connect to LSSS')
+
+    def update_geopackage(self):
+        pass
 
     def reload_bookmarks(self):
         self.treeview.delete(*self.treeview.get_children())
         self.load_bookmarks()
 
     def load_bookmarks(self):
-        self.bookmarks = []
-        if self.bookmarks_file.exists():
-            bmks = pd.read_excel(self.bookmarks_file)
+        # self.bookmarks = []
+        if self.bookmarks_xls.exists():
+            df = pd.read_excel(self.bookmarks_xls)
+
             # remove rows that don't have a timestamp in the Date column
-            bmks = bmks[pd.to_datetime(bmks['Date (UTC)'], errors='coerce').notna()]
-            bmks.sort_values('Date (UTC)', inplace=True)
+            df = df[pd.to_datetime(df['Date (UTC)'], errors='coerce').notna()]
+            df.sort_values('Date (UTC)', inplace=True)
+            bmks_xls = gpd.GeoDataFrame(df, crs='EPSG:4326',
+                    geometry=gpd.points_from_xy(x=df['Longitude'], y=df['Latitude']))
+
+            # load the existing gpkg file to geopandas, or make an empty one
+            bmks_gpkg = gpd.read_file(self.bookmarks_gpkg) \
+                if self.bookmarks_gpkg.exists() \
+                    else gpd.GeoDataFrame(bmks_xls[:0], geometry=[], crs="EPSG:4326")
+
+            # what is in bmks_xls that isn't in bmks_gpkg?
+            # note that this doesn't update any edits to existing rows in the xls file.
+            # To do that, it's probably necessary to use SQL commands and work on the
+            # geopackage file directly.
+            bmks_new = bmks_xls[~bmks_xls['Date (UTC)'].isin(bmks_gpkg['Date (UTC)'])]
+
+            # add those additional rows to bmks
+            bmks_new.to_file(self.bookmarks_gpkg, mode = 'a')
         try:
-            for index, row in bmks.iterrows():
+            for index, row in bmks_xls.iterrows():
                 # txt = f"{row['Date (UTC)']}    ({row['SGD confidence']:.0f}) {row['Notes']}"
                 match row['SGD confidence']:
                     case 1:
@@ -131,10 +160,10 @@ class SpatialBookmarkApp:
                                                          row['Notes']),
                                                  tags=tags)
 
-                self.bookmarks.append(row['Date (UTC)'])
+                # self.bookmarks.append(row['Date (UTC)'])
         except ValueError:
-            print(f'Failed to read {self.bookmarks_file}')
-            self.bookmarks = []
+            print(f'Failed to read {self.bookmarks_xls}')
+            # self.bookmarks = []
 
 if __name__ == "__main__":
     root = tk.Tk()
