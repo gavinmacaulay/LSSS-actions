@@ -1,0 +1,23 @@
+{
+  "label" : "AAD training package",
+  "version" : "",
+  "description" : "",
+  "callbacks" : [ ],
+  "keyStrokes" : [ {
+    "packageId" : "Utilities",
+    "actionId" : "GetPingTimestamp",
+    "keyStroke" : "shift ctrl D",
+    "context" : "MainWindow"
+  } ],
+  "toolbarButtons" : [ ],
+  "menus" : [ {
+    "text" : "AAD report",
+    "items" : [ {
+      "text" : "File report",
+      "items" : [ {
+        "packageId" : "Utilities",
+        "actionId" : "GetPingTimestamp"
+      } ]
+    } ]
+  } ]
+}
